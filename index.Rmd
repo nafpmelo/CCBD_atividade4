@@ -1,0 +1,32 @@
+---
+title: "Página teste"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+```
+
+## HOME
+
+```{r cars}
+iris <- read.csv("~/github/ciencia_colab/data/iris_mod.csv", header = T)
+
+iris %>% 
+  ggplot(aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+    geom_point() +
+    theme_classic()
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
