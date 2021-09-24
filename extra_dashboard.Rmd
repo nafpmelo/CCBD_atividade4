@@ -1,0 +1,105 @@
+---
+title: "Extra!"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(plotly)
+library(leaflet)
+iris <- read.csv("~/github/ciencia_colab/data/iris_mod.csv", header = T)
+```
+
+# Iris
+
+## Row
+
+### Scatterplot
+
+```{r}
+
+a1 <- iris %>% 
+  ggplot(aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+    geom_point() +
+    theme_classic()
+
+ggplotly(a1)
+
+```
+
+### Boxplot
+
+```{r chart B}
+a2 <- iris %>% 
+  pivot_longer(cols = Sepal.Length:Petal.Width, names_to = "variable", values_to = "size") %>% 
+  ggplot(aes(x = variable, y = size, color = Species)) +
+    geom_boxplot() +
+    facet_grid(~ Species) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    labs(y = "Size (cm)", x = "")
+
+ggplotly(a2)
+
+```
+
+
+## Row
+
+### Scatterplot
+```{r}
+
+a3 <- iris %>% 
+  ggplot(aes(x = Petal.Length, y = Petal.Width, color = Species)) +
+    geom_point() +
+    theme_classic()
+
+ggplotly(a3)
+
+```
+
+
+### Locais de amostragem (Península de Gaspe) 
+
+```{r chart C}
+# conferir no mapa
+iris %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(~lon,
+             ~lat)
+```
+
+# Dori
+
+## Row
+
+### Ocorrências de *Paracanthurus hepatus*
+
+```{r mapa_dori}
+
+dori <- read.csv("~/github/ciencia_colab/data/occ_GBIF-OBIS_par_hepa.csv", header = TRUE)
+
+pal <- colorFactor(palette = "viridis", domain = unique(dori$datasetName))
+
+dori %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(~decimalLongitude,
+                   ~decimalLatitude,
+                   radius = 5,
+                   label = ~as.character(datasetName),
+                   color = ~pal(dori$datasetName),
+                   stroke = FALSE, fillOpacity = 0.5) %>% 
+  addLegend('bottomright', 
+            colors = unique(pal(dori$datasetName)), 
+            labels = unique(dori$datasetName),
+            title = 'Dataset',
+            opacity = 0.5)
+
+```
