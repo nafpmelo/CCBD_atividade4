@@ -21,6 +21,8 @@ iris %>%
 
 ```
 
+## [Dashboard](extra_dashboard.html)
+
 ## Including Plots
 
 You can also embed plots, for example:

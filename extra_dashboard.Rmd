@@ -12,6 +12,7 @@ library(flexdashboard)
 library(tidyverse)
 library(plotly)
 library(leaflet)
+
 iris <- read.csv("~/github/ciencia_colab/data/iris_mod.csv", header = T)
 ```
 
