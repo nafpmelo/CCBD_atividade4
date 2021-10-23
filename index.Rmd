@@ -1,0 +1,277 @@
+---
+title: "Ocorrência da espécie Xylopia sericea através do GBIF"
+author: "Gabriel Depiantti"
+date: "22/10/2021"
+output:
+  html_document:
+    theme: cerulean
+    highlight: zenburn  
+
+---
+
+#### Neste tutorial, iremos aprender de manerira prática, como acessar as ocorrencias de uma determinada especies através do [GBIF](https://www.gbif.org/) - Global Biodiversity Information Facility. Neste caso, iremos usar como exemplo a espécie vegetal _Xylopia sericea_.
+
+_Xylopia sericea_: ![_Xylopia sericea_](\Users\gabri\Desktop\Gabriel Depiantti\Mestrado\Disciplinas\Ferramentas de Compartilhamento de BD\Ativadade_BDC\Atividade_Gabriel\Atividade_final\Ativ_Final_cien_colab\xylop.jpg)   
+
+
+#### 1. Pacotes necessários para as funções utilizadas 
+```{r message=FALSE}
+#install.packages("yaml")
+#install.packages("tidyverse") 
+#install.packages("rgbif")
+#install.packages("dplyr")
+#install.packages("ggmap")
+#install.packages("maps")
+#install.packages("mapdata")
+#install.packages('ggplot2')
+require(tidyverse)
+require(rgbif)
+require(dplyr)
+require(ggmap)
+require(maps)
+require(mapdata)
+require(ggplot2)
+require(yaml)
+```
+        
+ 
+  
+#### 2. Vamos utilizar a função `occ_data` para buscarmos ocorrencias no repositório do GBIF através no nome científico da especies que buscamos.
+  + Vamos utulizar os argumentos  `hasCoordinate` e `hasGeospatialIssue` para selecionarmos apenas ocorrencias que possuem coordenadas e sem problemas geoespaciais
+
+```{r}
+# baixar ocorrencias
+xylopea_gbif <- occ_data(scientificName = "Xylopia sericea", 
+                      hasCoordinate = TRUE,
+                      hasGeospatialIssue=FALSE)  
+
+```
+
+
+
+
+#### 3. Usaremos a função `dim` para acessarmos as dimensoes do banco de dados da busca.
+  + Com `$data` temos as dimensões da lista de conjunto de dados que podemos ter acesso.
+Atraves de `$data %>% names` podemos ver a lista com todos os data frames que podemos ter acesso.
+
+```{r}
+
+
+# Dimensoes do conjunto de dados 
+dim(xylopea_gbif$data)
+
+
+# Lista com todos os data frames
+xylopea_gbif$data %>% names
+```
+
+
+
+
+
+
+
+#### 4. Com função `gbif_issues` temos acesso a lista de problemas que já foram reportados e que possuem um código.
+  + Como existem muitos problemas reportados, utilizamos a função `strsplit` especificar os as issues.
+
+```{r}
+#Problemas reportados  
+gbif_issues() 
+
+
+issues_gbif<-xylopea_gbif$data$issues %>%
+    unique() %>%
+    strsplit(.,'[,]') %>%
+    unlist() 
+```
+
+
+
+
+
+
+
+
+#### 5. Problemas reportados
+  + Agora vamos selecionar variaveis que estejam relacionadas a especies escolhida e que vão validar os dados em futuras analises.
+
+```{r}
+xylopea_gbif1 <- xylopea_gbif$data %>%
+    dplyr::select(scientificName, acceptedScientificName,
+                  decimalLatitude, decimalLongitude,issues, basisOfRecord, 
+                  occurrenceStatus, rightsHolder, datasetName, 
+                  recordedBy, locality, habitat)
+```
+
+
+
+
+
+
+
+
+#### 6. Das ocorrências retornadas, vamos ver, através da função `distinct`, quantas são únicas.
+
+```{r}
+xylopea_gbif1 <- xylopea_gbif1 %>% 
+    distinct()
+```
+
+#### 7. Para sabermos os valores únicos presentes nos dados, vamos usar a função `unique` em cada coluna com a função `lapply`
+
+```{r}
+# checar niveis dos fatores
+lapply(xylopea_gbif1, unique)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### 8. Problemas não reportados 
+  + Para realizarmos uma apuração mais fina, checamos a ocorrencia da especies de uma forma mais restrita através dos dados em `habitat`
+```{r}
+# investigar niveis suspeitos
+xylopea_gbif1 %>% 
+    distinct(habitat) %>% 
+    pull()
+```
+
+
+
+#### 9. Aqui podemos ver que a área de ocorrência da especie é predominantemente na Ámerica do Sul
+```{r}
+# habitat
+xylopea_gbif1 %>%
+    group_by(habitat) %>% 
+    summarise(occ = length(scientificName)) %>% 
+    ggplot(aes(occ, y=habitat)) +
+    geom_bar(stat = 'identity') 
+```
+
+
+
+
+
+
+
+
+```{r}
+xylopea_gbif1 %>% 
+    filter(locality %in% c("NA", "Bosque denso alto inundable heterogeneo", "Arbustal denso", "Bosque inundado hasta 1.5 m. con Maquira coriacea, Erythroxylon, Pouteria, Brosimum lactescens y Xylopia.", "Mata de galeria. Margem direita do córrego, borda da mata.", "Bosque amazonico preandino inundable con Mauritia flexuosa, Cariniana domestica, Inga spp., y Protium spp.")) %>% 
+    distinct(datasetName) 
+```
+
+
+
+
+
+#### 10. Podemos aqui gerar um mapa mundo através da função `world` .
+  + Confirmamos aqui que a área de distribuição da _Xylopia sericea_ é prodominante da América do Sul, com alguns pontos de ocorrencia na América Central e um ponto na África.
+```{r}
+world <- map_data('world')
+
+ggplot() +
+    geom_polygon(data = world, aes(x = long, y = lat, group = group)) +
+    coord_fixed() +
+    theme_classic() +
+    geom_point(data = xylopea_gbif1, aes(x = decimalLongitude, y = decimalLatitude), color = "red") +
+    labs(x = "longitude", y = "latitude", title = expression(italic("Xylopia sericea")))
+```
+
+
+#### 11. Usamos o argumento `filter` para filtrar o mapa para o Brazil.
+  + Podemos observar uma maior concentração das ocorrências nas áreas litoreneas.
+
+```{r}
+Brazil <- map_data("world") %>% filter(region=="Brazil")
+
+ggplot() +
+    geom_polygon(data = Brazil, aes(x = long, y = lat, group = group)) +
+    coord_fixed() +
+    theme_classic() +
+    geom_point(data = xylopea_gbif1, aes(x = decimalLongitude, y = decimalLatitude), color = "red") +
+    labs(x = "longitude", y = "latitude", title = expression(italic("Xylopia sericea")))
+```
+
+
+
+
+#### 12. Utilizando o pacote `leaflet` podemos criar mapas interativos em `html`.
+  + Agora podemos ter maior detalhes das áreas de ocorrencia.
+  + Mas antes vamos buscar e filtrar os dados.
+
+```{r}
+
+require(tidyverse)
+require(rgbif)
+
+# ocorrencias
+xylopea_gbif <- occ_data(scientificName = "Xylopia sericea", 
+                      hasCoordinate = TRUE,
+                      hasGeospatialIssue = FALSE)
+# checar issues
+issues_gbif <- xylopea_gbif$data$issues %>% 
+  unique() %>% 
+  strsplit(., "[,]") %>% 
+  unlist()
+
+gbif_issues() %>% 
+  data.frame() %>% 
+  filter(code %in% issues_gbif)
+```
+
+
+
+
+```{r}
+# selecionar variaveis
+xylopea <- xylopea_gbif$data %>%
+  dplyr::select(scientificName, decimalLatitude, decimalLongitude) %>% 
+  distinct()
+```
+
+
+
+#### 13. Utilizando um data.frame com dados de coordenadas geográficas.
+  + A função `addTiles` vai mostrar o tipo de mapa utilizado.
+
+```{r}
+#install.packages("leaflet") 
+require(leaflet)
+
+# conferir no mapa
+xylopea %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(~decimalLongitude,
+             ~decimalLatitude)
+```
+
+
+
+#### 14. O biblioteca [Plotly](https://plotly.com/) permite criar varios tipos de gráficos interativos.
+  + Neste exemplo vamos usar um gráfico que mostra a ocorrencia da _Xylopia sericea_ através de um gradiente latitudinal.
+  + Aqui observamos uma ocorrência que corrobora com o que foi mostrado acima, próximas e ao sul da latitude 0º.
+  
+```{r}
+#install.packages("magrittr")
+require(magrittr)
+xylopea %>% 
+  mutate(lat = round(decimalLatitude)) %>% 
+  group_by(lat, scientificName) %>%
+  summarise(occ = length(scientificName)) %>%
+  ggplot(aes(y = occ, x = lat, color = scientificName)) +
+    geom_point() +
+    geom_smooth() +
+    theme_classic() +
+    labs(x = "latitude", y = 'ocorrências')
+```
