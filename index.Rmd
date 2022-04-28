@@ -12,7 +12,7 @@ library(tidyverse)
 ## HOME
 
 ```{r cars}
-iris <- read.csv("~/github/ciencia_colab/data/iris_mod.csv", header = T)
+iris <- read.csv("~/git/ciencia_colab/data/iris_mod.csv", header = T)
 
 iris %>% 
   ggplot(aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
