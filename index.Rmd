@@ -18,11 +18,11 @@ library(plotly)
 
 
 # load data
-campos <- read.csv("~/git/ciencia_colab/data/campos_gbif_25apr2022.csv", header = T) %>% 
+campos <- read.csv("data/campos_gbif_25apr2022.csv", header = T) %>% 
   mutate(municipio = rep(LETTERS[1:10], 924))
 
-NORFLU <- rgdal::readOGR("~/git/CCBD_atividade4/NORFLU/map.shp")
-UCs <- rgdal::readOGR("C:/Users/UENF/Downloads/UC_BR/ucstodas.shp")
+NORFLU <- rgdal::readOGR("NORFLU/map.shp")
+UCs <- rgdal::readOGR("UC_BR/ucstodas.shp")
 
 
 ```
