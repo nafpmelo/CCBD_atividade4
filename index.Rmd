@@ -1,11 +1,17 @@
 ---
 title: "Lente Ecologica"
-output: 
+output:
   flexdashboard::flex_dashboard:
     orientation: rows
     social: menu
     source_code: embed
   runtime: shiny
+resource_files:
+- map.prj
+- map.shx
+- map.dbf
+- ucstodas.dbf
+- ucstodas.shx
 ---
 
 ```{r global, include=FALSE}
@@ -22,8 +28,7 @@ campos <- read.csv("campos_gbif_25apr2022.csv", header = T) %>%
   mutate(municipio = rep(LETTERS[1:10], 924))
 
 NORFLU <- rgdal::readOGR("map.shp")
-UCs <- rgdal::readOGR("ucstodas.shp")
-
+#UCs <- rgdal::readOGR("ucstodas.shp")
 
 ```
 
@@ -32,7 +37,11 @@ UCs <- rgdal::readOGR("ucstodas.shp")
 
 ## Introdução {.sidebar}
 
-![](usingR.jpeg){width="200"}
+```{r}
+knitr::include_graphics("usingR.jpeg", error = FALSE)
+
+# ![](usingR.jpeg){width="200"}
+```
 
 O nome "Lente Ecológica" faz um paralelo entre as metodologias utilizadas no projeto e como a sociedade percebe o meio ambiente. O objetivo geral do projeto é ajustar o 'foco' dos participantes em relação a como estes enxergam a fauna e flora, e como o ser humano se observa nessas relações. Utilizando a observação direta como meio de inserção dos participantes no contexto ambiental através das lentes dos usuários (câmeras e *smartphones*) e meios de comunicação interativos -- as mídias sociais, o projeto buscará incentivar o aprendizado empírico-científico e gerar sensibilização ambiental.
 
@@ -313,10 +322,10 @@ renderPlotly({
 
 renderLeaflet({
   
-UCs %>%
+#UCs %>%
   leaflet() %>% 
     addTiles() %>% 
-    addPolygons() %>% 
+    #addPolygons() %>% 
     addCircleMarkers(data = campos %>% 
                        dplyr::filter(municipio == input$municipios,
                                      !is.na(decimalLatitude)) %>% 
