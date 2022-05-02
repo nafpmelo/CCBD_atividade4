@@ -32,25 +32,24 @@ NORFLU <- rgdal::readOGR("map.shp")
 
 ```
 
-
 # Início
 
 ## Introdução {.sidebar}
 
 ```{r}
-knitr::include_graphics("usingR.jpeg", error = FALSE)
+knitr::include_graphics("lente_ecologica.png", error = FALSE)
 
 # ![](usingR.jpeg){width="200"}
 ```
 
-O nome "Lente Ecológica" faz um paralelo entre as metodologias utilizadas no projeto e como a sociedade percebe o meio ambiente. O objetivo geral do projeto é ajustar o 'foco' dos participantes em relação a como estes enxergam a fauna e flora, e como o ser humano se observa nessas relações. Utilizando a observação direta como meio de inserção dos participantes no contexto ambiental através das lentes dos usuários (câmeras e *smartphones*) e meios de comunicação interativos -- as mídias sociais, o projeto buscará incentivar o aprendizado empírico-científico e gerar sensibilização ambiental.
-
+A "Lente Ecológica" faz um paralelo entre as metodologias utilizadas no projeto e como a sociedade percebe o meio ambiente. O objetivo do projeto é ajustar o 'foco' dos participantes em relação a fauna e flora, e como o ser humano se observa nessas relações. Utilizando a observação direta como meio de inserção dos participantes no contexto ambiental, as lentes das câmeras e *smartphones* e as mídias sociais serão as ferramentas do aprendizado empírico-científico e sensibilização ambiental dos participantes.
 
 ------------------------------------------------------------------------
 
 ## Row 1 {data-height="650"}
 
 ### **Ocorrências de espécies no Norte Fluminense** - Cada ponto na imagem corresponde a um registro de ocorrência de uma espécie ou táxon na região Norte Fluminense. Os dados foram coletados da base *Global Biodiversity Information Facility* (GBIF).
+
 ```{r mapa NF}
 
 pal <- colorFactor(palette = "viridis", domain = unique(campos$kingdom))
@@ -146,8 +145,7 @@ ggplotly(a1)
 
 # Municípios do Norte Fluminense
 
-Inputs {.sidebar}
------------------------------------------------------------------------
+## Inputs {.sidebar}
 
 ```{r}
 
