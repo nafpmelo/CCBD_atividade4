@@ -60,13 +60,17 @@ sp::over(firstPoints, UCs) %>% distinct()
 
 ## Introdução {.sidebar}
 
-```{r}
-knitr::include_graphics("lente_ecologica.png", error = FALSE)
-
-# ![](usingR.jpeg){width="200"}
-```
 
 A "Lente Ecológica" faz um paralelo entre as metodologias utilizadas no projeto e como a sociedade percebe o meio ambiente. O objetivo do projeto é ajustar o 'foco' dos participantes em relação a fauna e flora, e como o ser humano se observa nessas relações. Utilizando a observação direta como meio de inserção dos participantes no contexto ambiental, as lentes das câmeras e *smartphones* e as mídias sociais serão as ferramentas do aprendizado empírico-científico e sensibilização ambiental dos participantes.
+
+***
+
+```{r, out.width=220}
+
+knitr::include_graphics("lente_ecologica.png", error = FALSE)
+
+```
+
 
 ------------------------------------------------------------------------
 
@@ -105,12 +109,13 @@ NORFLU %>%
 
 ## Row 2 {data-height="250"}
 
-### Box1 {data-width="400"}
+### Espécies por Reino {data-width="400"}
 
 ```{r}
 
 a2 <- campos %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
+  filter(kingdom != "incertae sedis") %>% 
   group_by(kingdom) %>% 
   summarise(spp = n_distinct(scientificName)) %>% 
   ggplot(aes(y = kingdom, x = spp, fill = kingdom)) +
@@ -127,14 +132,14 @@ ggplotly(a2) %>%
 
 ```
 
-### Box2
+### Espécies por Filo e Reino
 
 ```{r}
 
 rank <- campos %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   group_by(kingdom, phylum) %>% 
-  summarise(spp = n_distinct(paste(genus, species))) %>% 
+  summarise(spp = n_distinct(scientificName)) %>% 
   filter(!phylum %in% c(NA, "")) %>% 
   arrange(kingdom, spp) %>% 
   pull(phylum)
@@ -142,26 +147,43 @@ rank <- campos %>%
 a1 <- campos %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   group_by(kingdom, phylum) %>% 
-  summarise(spp = n_distinct(paste(genus, species))) %>% 
+  summarise(spp = n_distinct(scientificName)) %>% 
   filter(!phylum %in% c(NA, "")) %>% 
   mutate(phylum = factor(phylum, levels = rank)) %>% 
   ggplot(aes(y = phylum, x = spp, fill = kingdom)) +
     geom_bar(stat = 'identity') +
-    #facet_wrap(kingdom ~ ., scales = 'free', nrow = 1) +
     theme_classic() +
     theme(legend.position = "") +
-    labs(x = "Número de táxons", y = "")
+    labs(x = "Espécies (n)", y = "")
 
 ggplotly(a1)
 
 
 ```
 
-### Box3
+### Espécies por Reino em cada município
 
 ```{r}
 
-ggplotly(a1)
+rankK <- campos %>% 
+  mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
+  group_by(kingdom) %>% 
+  summarise(spp = n_distinct(scientificName)) %>% 
+  arrange(kingdom, spp) %>% 
+  pull(kingdom)
+
+a3 <- campos %>% 
+  mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
+  filter(kingdom != "incertae sedis",
+         !phylum %in% c(NA, "")) %>% 
+  mutate(kingdom = factor(kingdom, levels = rankK)) %>%
+  select(phylum, municipio, scientificName) %>% 
+  ggplot(aes(x = municipio, fill = phylum)) +
+    geom_bar(position = 'fill') +
+    theme_classic() +
+    labs(y = "Número de espécies", y = "")
+
+ggplotly(a3)
 
 ```
 
@@ -264,23 +286,30 @@ renderValueBox({
 
 ## Row 2 {data-height="300"}
 
-### Boxplot
+### Espécies por Filo e Reino
 
 ```{r}
 
 
-renderPlot({
+renderPlotly({
   
-   campos %>% 
-    dplyr::filter(municipio == input$municipios) %>% 
-    mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-    group_by(kingdom) %>% 
-    summarise(spp = n_distinct(scientificName)) %>% 
-    ggplot(aes(y = kingdom, x = spp, fill = kingdom)) +
-      geom_bar(stat = 'identity') +
-      theme_classic() +
-      theme(legend.position = "") +
-      labs(y = "")
+  taxa <- campos %>% 
+  mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
+      dplyr::filter(municipio == input$municipios,
+                    kingdom != "incertae sedis",
+                    !phylum %in% c(NA, "")) %>% 
+      group_by(kingdom, phylum) %>%
+      summarise(spp = n_distinct(scientificName))
+ 
+  L2 <- taxa %>% 
+  ggplot(aes(y = phylum, x = spp, fill = kingdom)) +
+    geom_bar(stat = 'identity') +
+    theme_classic() +
+    theme(legend.position = "") +
+    labs(x = "Número de espécies", y = "")
+   
+      ggplotly(L2)
+
   
 })
 
