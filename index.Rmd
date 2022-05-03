@@ -30,6 +30,30 @@ campos <- read.csv("campos_gbif_25apr2022.csv", header = T) %>%
 NORFLU <- rgdal::readOGR("map.shp")
 #UCs <- rgdal::readOGR("ucstodas.shp")
 
+
+# Required packages
+library(rgdal)
+library(sp)
+
+
+# load data
+campos <- read.csv("campos_gbif_25apr2022.csv", header = T) %>% 
+  mutate(municipio = rep(LETTERS[1:10], 924)) %>% 
+  select(scientificName, decimalLongitude, decimalLatitude)
+
+# Shapefile import
+NORFLU <- rgdal::readOGR("map.shp")
+UCs <- rgdal::readOGR("ucstodas.shp")
+
+# Spatial data
+firstPoints <- SpatialPoints(coords = cbind(campos$decimalLongitude, campos$decimalLatitude), proj4string=CRS("+proj=longlat +datum=WGS84"))
+NORFLU_wsg84 <- spTransform(NORFLU, CRS("+proj=longlat +datum=WGS84"))
+proj4string(UCs) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
+sp::over(firstPoints, NORFLU_wsg84) %>% distinct()
+sp::over(firstPoints, UCs) %>% distinct()
+
+
+
 ```
 
 # Início
