@@ -24,35 +24,10 @@ library(plotly)
 
 
 # load data
-campos <- read.csv("campos_gbif_25apr2022.csv", header = T) %>% 
-  mutate(municipio = rep(LETTERS[1:10], 924))
+occ_NF <- read.csv("GBIF_occ_NF_03may2022.csv", header = T)
 
 NORFLU <- rgdal::readOGR("map.shp")
 #UCs <- rgdal::readOGR("ucstodas.shp")
-
-
-# Required packages
-library(rgdal)
-library(sp)
-
-
-# load data
-campos <- read.csv("campos_gbif_25apr2022.csv", header = T) %>% 
-  mutate(municipio = rep(LETTERS[1:10], 924)) %>% 
-  select(scientificName, decimalLongitude, decimalLatitude)
-
-# Shapefile import
-NORFLU <- rgdal::readOGR("map.shp")
-UCs <- rgdal::readOGR("ucstodas.shp")
-
-# Spatial data
-firstPoints <- SpatialPoints(coords = cbind(campos$decimalLongitude, campos$decimalLatitude), proj4string=CRS("+proj=longlat +datum=WGS84"))
-NORFLU_wsg84 <- spTransform(NORFLU, CRS("+proj=longlat +datum=WGS84"))
-proj4string(UCs) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
-sp::over(firstPoints, NORFLU_wsg84) %>% distinct()
-sp::over(firstPoints, UCs) %>% distinct()
-
-
 
 ```
 
@@ -80,40 +55,40 @@ knitr::include_graphics("lente_ecologica.png", error = FALSE)
 
 ```{r mapa NF}
 
-pal <- colorFactor(palette = "viridis", domain = unique(campos$kingdom))
+pal <- colorFactor(palette = "viridis", domain = unique(occ_NF$kingdom))
 
 NORFLU %>% 
   leaflet() %>% 
   addTiles() %>% 
   addPolygons(col = "",
-              fillColor = "yellow",
-              highlight = highlightOptions(weight = 0.5,
+              fillColor = "orange",
+              highlight = highlightOptions(weight = 0.2,
                                            color = "red",
                                            fillOpacity = 0.7,
-                                           bringToFront = TRUE),
+                                           bringToFront = F),
               label = ~NM_MUNICIP) %>% 
-  addCircleMarkers(data = campos,
+  addCircleMarkers(data = occ_NF,
                    ~decimalLongitude,
                    ~decimalLatitude,
-                   radius = 5,
+                   radius = 2,
                    #label = ~as.character(datasetName),
-                   color = ~pal(campos$kingdom),
+                   color = ~pal(occ_NF$kingdom),
                    stroke = FALSE, fillOpacity = 0.5) %>%
   addLegend('bottomright',
-          colors = unique(pal(campos$kingdom)),
-          labels = unique(campos$kingdom),
+          colors = unique(pal(occ_NF$kingdom)),
+          labels = unique(occ_NF$kingdom),
           title = 'Dataset',
           opacity = 0.5)
 
 ```
 
-## Row 2 {data-height="250"}
+## Row 2 {data-height="300"}
 
 ### Espécies por Reino {data-width="400"}
 
 ```{r}
 
-a2 <- campos %>% 
+a2 <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   filter(kingdom != "incertae sedis") %>% 
   group_by(kingdom) %>% 
@@ -136,7 +111,7 @@ ggplotly(a2) %>%
 
 ```{r}
 
-rank <- campos %>% 
+rank <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   group_by(kingdom, phylum) %>% 
   summarise(spp = n_distinct(scientificName)) %>% 
@@ -144,7 +119,7 @@ rank <- campos %>%
   arrange(kingdom, spp) %>% 
   pull(phylum)
 
-a1 <- campos %>% 
+a1 <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   group_by(kingdom, phylum) %>% 
   summarise(spp = n_distinct(scientificName)) %>% 
@@ -165,23 +140,24 @@ ggplotly(a1)
 
 ```{r}
 
-rankK <- campos %>% 
+rankK <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   group_by(kingdom) %>% 
   summarise(spp = n_distinct(scientificName)) %>% 
   arrange(kingdom, spp) %>% 
   pull(kingdom)
 
-a3 <- campos %>% 
+a3 <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
   filter(kingdom != "incertae sedis",
          !phylum %in% c(NA, "")) %>% 
   mutate(kingdom = factor(kingdom, levels = rankK)) %>%
-  select(phylum, municipio, scientificName) %>% 
-  ggplot(aes(x = municipio, fill = phylum)) +
+  select(kingdom, NM_MUNICIP, scientificName) %>% 
+  ggplot(aes(y = NM_MUNICIP, fill = kingdom)) +
     geom_bar(position = 'fill') +
     theme_classic() +
-    labs(y = "Número de espécies", y = "")
+    labs(x = "Número de espécies", y = "") +
+    theme(legend.title = element_blank())
 
 ggplotly(a3)
 
@@ -195,11 +171,11 @@ ggplotly(a3)
 
 ```{r}
 
-lista_municipios <- LETTERS[1:10]
+lista_NM_MUNICIPs <- occ_NF %>% distinct(NM_MUNICIP) %>% pull()
 
-selectInput("municipios", label = h3("Selecione um município para ver as ocorrências de espécies locais"), 
-            choices = lista_municipios, 
-            selected = lista_municipios[[1]])
+selectInput("NM_MUNICIPs", label = h3("Selecione um município para ver as ocorrências de espécies locais"), 
+            choices = lista_NM_MUNICIPs, 
+            selected = lista_NM_MUNICIPs[[1]])
 
 ```
 
@@ -209,17 +185,17 @@ selectInput("municipios", label = h3("Selecione um município para ver as ocorr�
 
 ```{r}
 
-media_riqueza <- campos %>% 
+media_riqueza <- occ_NF %>% 
   dplyr::filter(species != "") %>% 
-  group_by(municipio) %>% 
+  group_by(NM_MUNICIP) %>% 
   summarise(spp = n_distinct(species)) %>% 
-  mutate(media = mean(spp)) %>% 
+  mutate(media = median(spp)) %>% 
   pull() %>% 
   unique()
 
 renderValueBox({
-  riqueza <- campos %>% 
-    dplyr::filter(municipio == input$municipios) %>%
+  riqueza <- occ_NF %>% 
+    dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs) %>%
     summarise(n_distinct(species)) %>% 
     pull()
   valueBox(
@@ -237,18 +213,18 @@ renderValueBox({
 
 ```{r}
 
-media_occ <- campos %>% 
+media_occ <- occ_NF %>% 
   dplyr::filter(species != "") %>% 
-  group_by(municipio) %>% 
-  summarise(spp = n_distinct(species)) %>% 
-  mutate(media = mean(spp)) %>% 
+  group_by(NM_MUNICIP) %>% 
+  summarise(occ = n_distinct(occurrenceID)) %>% 
+  mutate(media = median(occ)) %>% 
   pull() %>% 
   unique()
 
 renderValueBox({
-  occ_local <- campos %>% 
-    dplyr::filter(municipio == input$municipios) %>%
-    summarise(n_distinct(species)) %>% 
+  occ_local <- occ_NF %>% 
+    dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs) %>%
+    summarise(n_distinct(occurrenceID)) %>% 
     pull()
   valueBox(
     value = occ_local,
@@ -264,10 +240,10 @@ renderValueBox({
 
 ```{r}
 
-media_riqueza <- campos %>% 
+media_riqueza <- occ_NF %>% 
   dplyr::filter(species != "") %>% 
-  group_by(municipio) %>% 
-  summarise(spp = n_distinct(species)) %>% 
+  group_by(NM_MUNICIP) %>% 
+  summarise(spp = n_distinct(scientificName)) %>% 
   mutate(media = mean(spp)) %>% 
   pull() %>% 
   unique()
@@ -293,9 +269,9 @@ renderValueBox({
 
 renderPlotly({
   
-  taxa <- campos %>% 
+  taxa <- occ_NF %>% 
   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-      dplyr::filter(municipio == input$municipios,
+      dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs,
                     kingdom != "incertae sedis",
                     !phylum %in% c(NA, "")) %>% 
       group_by(kingdom, phylum) %>%
@@ -321,8 +297,8 @@ renderPlotly({
 ```{r chart B}
 
 renderTable({
-  campos %>% 
-    dplyr::filter(municipio == input$municipios,
+  occ_NF %>% 
+    dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs,
                   species != "") %>%
     dplyr::select(species, kingdom:order, occurrenceID) %>% 
     group_by(species, kingdom, class, order) %>% 
@@ -341,8 +317,8 @@ renderTable({
 
 renderPlotly({
   
-    linhas <- campos %>% 
-      dplyr::filter(municipio == input$municipios,
+    linhas <- occ_NF %>% 
+      dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs,
                     !is.na(year)) %>% 
       group_by(year) %>%
       summarise(id = n_distinct(occurrenceID),
@@ -377,15 +353,15 @@ renderLeaflet({
   leaflet() %>% 
     addTiles() %>% 
     #addPolygons() %>% 
-    addCircleMarkers(data = campos %>% 
-                       dplyr::filter(municipio == input$municipios,
+    addCircleMarkers(data = occ_NF %>% 
+                       dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs,
                                      !is.na(decimalLatitude)) %>% 
                        distinct(),
                      ~decimalLongitude, 
                      ~decimalLatitude,
                      radius = 5,
                      #label = ~as.character(datasetName),
-                     color = ~pal(campos$kingdom),
+                     color = ~pal(occ_NF$kingdom),
                      stroke = FALSE, 
                      fillOpacity = 0.5) 
 })
