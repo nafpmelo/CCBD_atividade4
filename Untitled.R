@@ -9,13 +9,15 @@ library(sp)
 #   #mutate(municipio = rep(LETTERS[1:10], 924)) %>% 
 #   select(scientificName, decimalLongitude, decimalLatitude)
 
-occs <- norte_RJ %>%
-  dplyr::select(occurrenceID, decimalLongitude, decimalLatitude)
 
 norte_RJ <- read.delim("~/Downloads/0263225-210914110416597.csv") %>% 
   mutate(decimalLongitude = as.numeric(decimalLongitude), 
          decimalLatitude = as.numeric(decimalLatitude)) %>% 
   filter(!is.na(decimalLongitude))
+
+
+occs <- norte_RJ %>%
+  dplyr::select(occurrenceID, decimalLongitude, decimalLatitude)
 
 
 # Shapefile import
@@ -26,18 +28,22 @@ UCs <- rgdal::readOGR("ucstodas.shp")
 proj4string(UCs) <- CRS("+proj=longlat +datum=WGS84")
 
 # Filter UCs within cities
-UCs_NF <- subset(UCs, ID_UC0 %in% c(over(NORFLU_wsg84, UCs) %>%  
-                                      distinct(ID_UC0) %>% 
-                                      filter(!is.na(.)) %>% 
-                                      pull()))
+UCs_NF <- UCs %>% subset(NOME_UC1 %in% c(occ_NF %>% 
+                                   select(NOME_UC1, NM_MUNICIP) %>% 
+                                   filter(!is.na(NOME_UC1)) %>% 
+                                   distinct(NOME_UC1) %>% pull()))
 
-writeOGR(UCs_NF, dsn = "/Users/cesarcordeiro/git/CCBD_atividade4", layer = "UCs_NF",
+
+writeOGR(UCs_NF, dsn = "/Users/cesarcordeiro/git/CCBD_atividade4", layer = "UCs_NF1",
          driver = "ESRI Shapefile")
 
-
+UCs_NF@data <- left_join(UCs_NF@data, occ_NF %>% 
+                           select(NOME_UC1, NM_MUNICIP) %>% 
+                           filter(!is.na(NOME_UC1)) %>% 
+                           distinct())
 
 # Spatial data
-firstPoints <- SpatialPoints(coords = cbind(occs$decimalLongitude, occs$decimalLatitude),
+firstPoints <- SpatialPoints(coords = cbind(occ$decimalLongitude, occs$decimalLatitude),
                              proj4string=CRS("+proj=longlat +datum=WGS84"))
 # firstPoints <- SpatialPointsDataFrame(coords = cbind(occ_NF$decimalLongitude, occ_NF$decimalLatitude), data = occ_NF,
 #                                proj4string = CRS("+proj=longlat +datum=WGS84"))
@@ -68,7 +74,7 @@ occ_NF %>%
                                      "Reserva Biológica", "Reserva Particular do Patrimônio Natural"))) %>% 
   mutate(CATEGORIA = ifelse(CATEGORI3 == "Fora de UC", "Fora de UC", "Dentro de UC")) %>% 
   ggplot(aes(y = NM_MUNICIP, fill = CATEGORI3)) +
-    geom_bar(position = 'fill') +
+    geom_bar(position = 'stack') +
     theme_classic() +
     theme(legend.title = element_blank()) +
     labs(x = "", y = "")
@@ -153,4 +159,27 @@ data.frame(x = 1, percent = 54.2) %>%
     theme_void() + 
     # theme(plot.margin = unit(rep(0, 4), "cm")) +
     labs(title = "Espécies não ameaçadas")
+
+###############################
+
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = subset(NORFLU, NM_MUNICIP == "MACAÉ"),
+              col = "",
+              fillColor = "blue",
+              highlight = highlightOptions(weight = 0.1,
+                                           color = "darkblue",
+                                           fillOpacity = 0.7,
+                                           bringToFront = F)) %>% 
+  addPolygons(data = subset(UCs_NF, NM_MUNICIP == "MACAÉ"),
+              fillColor = "red") %>% 
+  addCircleMarkers(data = occ_NF %>% 
+                     dplyr::filter(!is.na(decimalLatitude)) %>% 
+                     distinct(),
+                   ~decimalLongitude, 
+                   ~decimalLatitude,
+                   radius = 5,
+                   #label = ~as.character(datasetName),
+                   stroke = FALSE, 
+                   fillOpacity = 0.5) 
 

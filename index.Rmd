@@ -209,6 +209,12 @@ selectInput("NM_MUNICIPs", label = h3("Selecione um município para ver as ocorr
             choices = lista_NM_MUNICIPs, 
             selected = lista_NM_MUNICIPs[[1]])
 
+# lista_UCs <- occ_NF %>% distinct(NOME_UC1) %>% pull()
+# 
+# selectInput("NOME_UC1", label = h4("Selecione uma categoria de Unidade de Conservação"), 
+#             choices = lista_UCs, 
+#             selected = lista_UCs[[1]])
+
 ```
 
 ## Row 1 {data-height="200"}
@@ -448,4 +454,8 @@ renderLeaflet({
 
 # Dados e referências
 
-mknjbhvgcfd
+Dados de ocorrência de espécies: GBIF.org (3 May 2022) GBIF Occurrence Download https://doi.org/10.15468/dl.d6p22y - acesso em 03/05/2022
+
+Limites dos municípios do Estado do Rio de Janeiro (2018) https://www.ceperj.rj.gov.br/?page_id=258 - acesso em 01/05/2022
+
+Lista de espécies ameaçadas: ICMBio (2020) http://dados.mma.gov.br/dataset/especies-ameacadas/resource/1f13b062-f3f6-4198-a4c5-3581548bebec - acesso em 05/05/2022
