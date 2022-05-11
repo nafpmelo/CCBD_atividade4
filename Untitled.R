@@ -33,14 +33,24 @@ UCs_NF <- UCs %>% subset(NOME_UC1 %in% c(occ_NF %>%
                                    filter(!is.na(NOME_UC1)) %>% 
                                    distinct(NOME_UC1) %>% pull()))
 
+# UCs_NF@data <- left_join(UCs_NF@data, occ_NF %>% 
+#                            select(NOME_UC1, NM_MUNICIP) %>% 
+#                            filter(!is.na(NOME_UC1)) %>% 
+#                            distinct())
+# 
+# UCs_NF$NM_MUNICIP <- occ_NF %>% 
+#   select(NOME_UC1, NM_MUNICIP) %>% 
+#   filter(!is.na(NOME_UC1)) %>%
+#   distinct() %>% 
+#   select(NM_MUNICIP)
 
-writeOGR(UCs_NF, dsn = "/Users/cesarcordeiro/git/CCBD_atividade4", layer = "UCs_NF1",
+
+
+writeOGR(UCs_NF, dsn = "/Users/cesarcordeiro/git/CCBD_atividade4", layer = "UCs_NF",
          driver = "ESRI Shapefile")
 
-UCs_NF@data <- left_join(UCs_NF@data, occ_NF %>% 
-                           select(NOME_UC1, NM_MUNICIP) %>% 
-                           filter(!is.na(NOME_UC1)) %>% 
-                           distinct())
+
+
 
 # Spatial data
 firstPoints <- SpatialPoints(coords = cbind(occ$decimalLongitude, occs$decimalLatitude),
