@@ -12,6 +12,10 @@ resource_files:
 - map.dbf
 - ucstodas.dbf
 - ucstodas.shx
+- ucstodas.shp
+- UCs_NF.dbf
+- UCs_NF.prj
+- UCs_NF.shx
 ---
 
 ```{r global, include=FALSE}
@@ -133,53 +137,12 @@ a3 <- occ_NF %>%
 
 ggplotly(a3)
 
-# rank <- occ_NF %>% 
-#   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-#   group_by(kingdom, phylum) %>% 
-#   summarise(spp = n_distinct(scientificName)) %>% 
-#   filter(!phylum %in% c(NA, "")) %>% 
-#   arrange(kingdom, spp) %>% 
-#   pull(phylum)
-# 
-# a1 <- occ_NF %>% 
-#   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-#   group_by(kingdom, phylum) %>% 
-#   summarise(spp = n_distinct(scientificName)) %>% 
-#   filter(!phylum %in% c(NA, "")) %>% 
-#   mutate(phylum = factor(phylum, levels = rank)) %>% 
-#   ggplot(aes(y = phylum, x = spp, fill = kingdom)) +
-#     geom_bar(stat = 'identity') +
-#     theme_classic() +
-#     theme(legend.position = "") +
-#     labs(x = "Espécies (n)", y = "")
-# 
-# ggplotly(a1)
-
 
 ```
 
 ### Espécies ameaçadas (ICMBio 2020)
 
 ```{r}
-
-# rankK <- occ_NF %>% 
-#   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-#   group_by(kingdom) %>% 
-#   summarise(spp = n_distinct(scientificName)) %>% 
-#   arrange(kingdom, spp) %>% 
-#   pull(kingdom)
-# 
-# a3 <- occ_NF %>% 
-#   mutate(kingdom = factor(kingdom, levels = c("Viruses", "Bacteria", "Chromista", "Fungi", "Plantae", "Animalia", "incertae sedis"))) %>% 
-#   filter(kingdom != "incertae sedis",
-#          !phylum %in% c(NA, "")) %>% 
-#   mutate(kingdom = factor(kingdom, levels = rankK)) %>%
-#   select(kingdom, NM_MUNICIP, scientificName) %>% 
-#   ggplot(aes(y = NM_MUNICIP, fill = kingdom)) +
-#     geom_bar(position = 'fill') +
-#     theme_classic() +
-#     labs(x = "Número de espécies", y = "") +
-#     theme(legend.title = element_blank())
 
 a3 <- occ_NF %>% 
   mutate(ameacada = ifelse(is.na(Categoria.de.Ameaça), "não", "sim")) %>% 
@@ -209,12 +172,6 @@ selectInput("NM_MUNICIPs", label = h3("Selecione um município para ver as ocorr
             choices = lista_NM_MUNICIPs, 
             selected = lista_NM_MUNICIPs[[1]])
 
-# lista_UCs <- occ_NF %>% distinct(NOME_UC1) %>% pull()
-# 
-# selectInput("NOME_UC1", label = h4("Selecione uma categoria de Unidade de Conservação"), 
-#             choices = lista_UCs, 
-#             selected = lista_UCs[[1]])
-
 ```
 
 ## Row 1 {data-height="200"}
@@ -238,7 +195,7 @@ renderValueBox({
     pull()
   valueBox(
     value = riqueza,
-    icon = "fa-area-chart",
+    icon = "fa-bug",
     color = if (riqueza < media_riqueza) "warning" else "primary"
   )
 })
@@ -295,8 +252,6 @@ flexdashboard::renderGauge({
     )
   
 })
-  
-
 
 ```
 
@@ -330,7 +285,6 @@ renderPlotly({
   
 })
 
-
 ```
 
 
@@ -363,7 +317,6 @@ renderPlotly({
   
 })
 
-
 ```
 
 ### Grupos taxonômicos
@@ -379,7 +332,6 @@ renderTable({
     summarise(ocorrencias = n_distinct(occurrenceID))
 
 })
-
 
 ```
 
@@ -412,7 +364,6 @@ renderPlotly({
    
 })
 
-
 ```
 
 ### Ocorrências no município
@@ -433,7 +384,8 @@ renderLeaflet({
                                            fillOpacity = 0.7,
                                            bringToFront = F)) %>% 
     addPolygons(data = UCs_NF,
-                fillColor = "red") %>% 
+                fillColor = "red",
+                label = ~NOME_UC1) %>% 
     addCircleMarkers(data = occ_NF %>% 
                        dplyr::filter(NM_MUNICIP == input$NM_MUNICIPs,
                                      !is.na(decimalLatitude)) %>% 
@@ -446,7 +398,6 @@ renderLeaflet({
                      stroke = FALSE, 
                      fillOpacity = 0.5) 
 })
-
 
 ```
 

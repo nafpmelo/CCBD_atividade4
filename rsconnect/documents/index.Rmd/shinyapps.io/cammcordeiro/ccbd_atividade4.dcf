@@ -5,10 +5,10 @@ account: cammcordeiro
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6203017
-bundleId: 5857065
+bundleId: 5897281
 url: https://cammcordeiro.shinyapps.io/ccbd_atividade4/
-when: 1651418113.87781
-lastSyncTime: 1651418113.87786
+when: 1652310876.66747
+lastSyncTime: 1652310876.66749
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: ucstodas.dbf|ucstodas.shx
+additionalFiles: ucstodas.shp|UCs_NF.dbf|UCs_NF.prj|UCs_NF.shx
